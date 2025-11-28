@@ -1,8 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&family=Inter:wght@300;400;500;600;700&family=Patrick+Hand&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f0f7ff;
+  --foreground: #1a1a1a;
+  --card-background: #ffffff;
+  --border-color: #e5e7eb;
+  --primary-blue: #2563eb;
+  --primary-blue-dark: #1e40af;
+  --text-gray: #6b7280;
+  --text-dark: #1f2937;
 }
 
 @theme inline {
@@ -12,15 +19,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: linear-gradient(to bottom right, #e0f2fe, #f0f9ff, #ecfeff);
+  color: var(--foreground);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Handwriting font class */
+.font-handwriting {
+  font-family: var(--font-handwriting), 'Comic Neue', 'Patrick Hand', 'Indie Flower', cursive;
 }
