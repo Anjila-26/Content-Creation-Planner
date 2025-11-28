@@ -22,7 +22,7 @@ const menuItems = [
 ];
 
 const bottomItems = [
-  { icon: Settings, label: 'Settings' },
+  { icon: Settings, label: 'Settings', href: '/settings' },
   { icon: HelpCircle, label: 'Support' },
 ];
 
@@ -100,7 +100,12 @@ export default function Sidebar() {
         {bottomItems.map((item) => (
           <button
             key={item.label}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 text-gray-600 hover:bg-gray-50 transition-colors"
+            onClick={() => item.href && router.push(item.href)}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-colors ${
+              pathname === item.href
+                ? 'bg-blue-50 text-blue-900'
+                : 'text-gray-600 hover:bg-gray-50'
+            }`}
           >
             <item.icon className="w-5 h-5" />
             <span className="text-sm font-medium">{item.label}</span>

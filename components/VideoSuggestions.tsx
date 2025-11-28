@@ -3,6 +3,7 @@
 import { Sparkles, Lightbulb, Video, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getSettings } from '../lib/settings';
 
 interface HookSuggestion {
   hook: string;
@@ -38,9 +39,22 @@ export default function VideoSuggestions({
       return;
     }
 
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    // Fetch user's API key from settings
+    let apiKey: string | null = null;
+    try {
+      const settings = await getSettings();
+      apiKey = settings.gemini_api_key || null;
+    } catch (err) {
+      console.error('Error fetching settings:', err);
+    }
+
+    // Fall back to environment variable if user hasn't set their own key
+    if (!apiKey) {
+      apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || null;
+    }
+
     if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-      setError('Please configure NEXT_PUBLIC_GEMINI_API_KEY in .env.local');
+      setError('Please add your Gemini API key in Settings. You can get one from https://makersuite.google.com/app/apikey');
       return;
     }
 

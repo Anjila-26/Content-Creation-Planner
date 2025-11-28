@@ -29,8 +29,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'video_project_id and title are required' }, { status: 400 });
     }
 
-    if (!process.env.NEXT_PUBLIC_GEMINI_API_KEY) {
-      return NextResponse.json({ error: 'Gemini API key not configured' }, { status: 500 });
+    // Fetch user's API key from settings
+    const { data: userSettings, error: settingsError } = await supabase
+      .from('user_settings')
+      .select('gemini_api_key')
+      .eq('user_id', user.id)
+      .single();
+
+    // Use user's API key if available, otherwise fall back to environment variable
+    const apiKey = userSettings?.gemini_api_key || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+
+    if (!apiKey) {
+      return NextResponse.json({ 
+        error: 'Gemini API key not configured. Please add your API key in Settings.' 
+      }, { status: 500 });
     }
 
     // Generate concept using simple script format
@@ -69,7 +81,7 @@ ${rough_sketch ? `Rough Sketch: ${rough_sketch}` : ''}
 
 Keep it simple, practical, beginner-friendly, and engaging. Focus on clear, actionable content that gets straight to the point.`;
 
-    const conceptResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.NEXT_PUBLIC_GEMINI_API_KEY}`, {
+    const conceptResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
