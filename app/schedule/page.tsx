@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronLeft, ChevronRight, Plus, Search, RefreshCw } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { DndContext, useDraggable, useDroppable, DragOverlay } from '@dnd-kit/core';
 import Sidebar from '../../components/Sidebar';
 import VideoDetailModal from '../../components/VideoDetailModal';
@@ -211,15 +211,41 @@ export default function SchedulePage() {
   // Helper for draggable event card (square for weekly, rectangle for monthly)
   function DraggableEventCard({ event, compact = false }: { event: VideoEvent; compact?: boolean }) {
     const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: event.id });
+    const mouseDownPos = useRef<{ x: number; y: number } | null>(null);
+    const wasJustDragged = useRef(false);
 
-    const handleClick = (e: React.MouseEvent) => {
-      // Only open modal if this event wasn't just dragged
-      if (!isDragging && draggedEventId !== event.id && activeId === null) {
+    // Track if this event was just dragged
+    useEffect(() => {
+      if (draggedEventId === event.id) {
+        wasJustDragged.current = true;
+        const timer = setTimeout(() => {
+          wasJustDragged.current = false;
+        }, 300);
+        return () => clearTimeout(timer);
+      }
+    }, [draggedEventId, event.id]);
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+      mouseDownPos.current = { x: e.clientX, y: e.clientY };
+      wasJustDragged.current = false;
+    };
+
+    const handleMouseUp = (e: React.MouseEvent) => {
+      if (!mouseDownPos.current) return;
+      
+      const deltaX = Math.abs(e.clientX - mouseDownPos.current.x);
+      const deltaY = Math.abs(e.clientY - mouseDownPos.current.y);
+      const wasClick = deltaX < 5 && deltaY < 5; // Less than 5px movement = click
+      
+      // Only open modal if it was a click (not a drag) and not currently dragging
+      if (wasClick && !isDragging && !wasJustDragged.current && activeId === null) {
         e.preventDefault();
         e.stopPropagation();
         setSelectedVideoId(event.projectId);
         setIsModalOpen(true);
       }
+      
+      mouseDownPos.current = null;
     };
 
     if (compact) {
@@ -229,12 +255,13 @@ export default function SchedulePage() {
           ref={setNodeRef}
           {...attributes}
           {...listeners}
-          onClick={handleClick}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
           className={`cursor-grab active:cursor-grabbing transition-all duration-200 ${
             isDragging ? 'opacity-0' : 'opacity-100 hover:opacity-80'
           } ${event.color} rounded px-2 py-1 text-xs text-white line-clamp-1 shadow-sm mb-1`}
           style={{ touchAction: 'none' }}
-          title={event.title}
+          title={`${event.title} - Click to view details`}
         >
           {event.title}
         </div>
@@ -247,11 +274,13 @@ export default function SchedulePage() {
         ref={setNodeRef}
         {...attributes}
         {...listeners}
-        onClick={handleClick}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
         className={`cursor-grab active:cursor-grabbing transition-all duration-200 ${
           isDragging ? 'opacity-0' : 'opacity-100 hover:scale-105 hover:shadow-lg'
         } ${event.color} rounded-lg p-2 mb-2 shadow-md aspect-square flex flex-col justify-between`}
         style={{ touchAction: 'none' }}
+        title="Click to view details, drag to move"
       >
         <div>
           <h4 className="font-bold text-white text-xs mb-0.5 line-clamp-2">{event.title}</h4>
